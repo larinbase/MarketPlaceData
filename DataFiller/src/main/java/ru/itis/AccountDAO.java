@@ -1,21 +1,22 @@
 package ru.itis;
 
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import javax.sql.DataSource;
+import java.sql.*;
+import java.util.UUID;
 
 public class AccountDAO {
-    private final String HOST = "jdbc:postgresql://localhost:5432/MarketplaceDB";
-    private final String USER = "postgres";
-    private final String PASS = "1234";
+    private final DataSource dataSource;
+
+    public AccountDAO(DataSource dataSource){
+        this.dataSource = dataSource;
+    }
 
     //language=sql
     private static final String SQL_SAVE = "insert into accounts(first_name, last_name, city_id, phone_num, email, tag, patronymic, birthday, profession, nationality) values (?,?,?,?,?,?,?,?,?,?)";
 
     public void save(Account account) {
-        try (Connection connection = DriverManager.getConnection(HOST, USER, PASS);
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL_SAVE, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, account.getFirstName());
@@ -31,11 +32,17 @@ public class AccountDAO {
 
             int affect = preparedStatement.executeUpdate();
 
-
             if (affect != 1) {
                 throw new SQLException("Cannot insert account");
             }
 
+            try (ResultSet generatedIds = preparedStatement.getGeneratedKeys()){
+                if (generatedIds.next()) {
+                    account.setId((UUID) generatedIds.getObject("id"));
+                } else {
+                    throw new SQLException("Cannot retrieve id");
+                }
+            }
 
         } catch (SQLException e) {
             throw new RuntimeException(e);

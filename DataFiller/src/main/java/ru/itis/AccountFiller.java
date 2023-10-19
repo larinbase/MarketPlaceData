@@ -17,7 +17,7 @@ public class AccountFiller {
         return Account.builder()
                 .firstName(faker.name().firstName())
                 .lastName(faker.name().lastName())
-                .cityId(faker.random().nextInt(1,5))
+                .cityId(faker.random().nextInt(1,2))
                 .phoneNum(faker.phoneNumber().subscriberNumber(10))
                 .email(faker.internet().emailAddress())
                 .tag(list[faker.random().nextInt(0,1)])
